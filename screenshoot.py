@@ -46,41 +46,104 @@ month = {
     '8' :'Agustus', '9' :'September', '10' :'Oktober', '11' :'November', '12' :'Desember'
 }
 
+# Fungsi Clear CMD
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
 
+# Fungsi untuk Screenshoot Harian
+def loop (ip1:(str), ip2:(str), lokasi:(str), nama:(str)):
+    web = 'http://10.38.3.25/report.jsp?templid=_if&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate'
+    driver.get(web+'&stime='+ str(int(epoch_time)) + '&etime=' + str(int(epoch_time2)) + '&sample_nunits=1&sample_unit=minute')
+    driver.set_window_size(782, 768)
+    wait_element = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'overlay')))
+    time.sleep(1)
+    element = driver.find_element('name','rep_form')
+    if (i % 2 == 0):
+        element.screenshot(lokasi+ str.title(month[month_s]) + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC1_traffic.png')
+    else:
+        element.screenshot(lokasi+ str.title(month[month_s]) + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC2_traffic.png') 
+
+# Fungsi untuk Screenshoot Custom
+def loop2 (ip1:(str), ip2:(str), lokasi:(str), nama:(str)):
+    if recog == 'Y':
+        if io == 'IN':
+            web = 'http://10.38.3.25/report.jsp?templid=0026&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate&drilldown_filter=inif%3D'+ip2
+        else:
+            web = 'http://10.38.3.25/report.jsp?templid=0026&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate&drilldown_filter=outif%3D'+ip2
+    else:
+        web = 'http://10.38.3.25/report.jsp?templid=_if&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate'
+    driver.get(web+'&stime='+ str(int(epoch_time)) + '&etime=' + str(int(epoch_time2)) + '&sample_nunits=1&sample_unit=minute')
+    if recog == 'Y':
+        driver.set_window_size(800, 900)
+    else:
+        driver.set_window_size(782, 768)
+    wait_element = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'overlay')))
+    time.sleep(1)
+    element = driver.find_element('name','rep_form')
+    if io == "IN" and ipsec == "1":
+        element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC1_traffic_IN.png')
+    elif io == "IN" and ipsec == "2":
+        element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC2_traffic_IN.png')
+    elif io == "OUT" and ipsec == "1":
+        element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC1_traffic_OUT.png')
+    elif io == "OUT" and ipsec == "2":
+        element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC2_traffic_OUT.png')
+    elif io == None and ipsec == "1":
+        element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC1_traffic.png')
+    elif io == None and ipsec == "2":
+        element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC2_traffic.png')
+
+# Mulai Program ===================================================================================================
 pertanyaan = 'Y'
 while(pertanyaan == 'Y'):
-    # Input Pilihan Custom -----------------------------
-    print('============================')
-    print('1. Screenshoot Harian')
-    print('2. Screenshoot Custom')
-    print('============================')
-    pilihan = input('Masukan Pilihan : ')
-    if pilihan == "2" :
-        device =  str(input('Masukan Device(Ex.FOR/CPC) : '))
-        ipsec = str(input('Pilih IPSEC (1-2) : '))
-        recog = str.upper(input('Recognized Applications (Y/N) : '))
-        if recog == 'Y':
-                io = str.upper(input('IN / OUT ? : '))
+    while True:
+        try:
+            # Input Pilihan Custom -----------------------------
+            print('============================')
+            print('1. Screenshoot Harian')
+            print('2. Screenshoot Custom')
+            print('============================')
+            pilihan = input('Masukan Pilihan : ')
+            if pilihan == "2" :
+                io = None
+                device =  str(input('Masukan Device(Ex.FOR/CPC) : '))
+                ipsec = str(input('Pilih IPSEC (1-2) : '))
+                recog = str.upper(input('Recognized Applications (Y/N) : '))
+                if recog == 'Y':
+                        io = str.upper(input('IN / OUT ? : '))
 
-    # Input Data Waktu Netflow --------------------------
-    print('\n==== Masukan Waktu Awal ====')
-    waktu = str(input("Masukan Tanggal (2022/12/30) : ")) #ini akan Split [2022] [12] [30]
-    waktu_s = waktu.split('/')
+            # Input Data Waktu Netflow --------------------------
+            print('\n==== Masukan Waktu Awal ====')
+            waktu = str(input("Masukan Tanggal (2022/12/30) : ")) #ini akan Split [2022] [12] [30]
+            waktu_s = waktu.split('/')
 
-    jam = input("Masukan Jam (24.00) : ") #nanti akan mendapatkan nilai [07] [00]
-    jam_s = jam.split('.')
+            jam = input("Masukan Jam (24.00) : ") #nanti akan mendapatkan nilai [07] [00]
+            jam_s = jam.split('.')
 
-    print('\n==== Masukan Jam Akhir ====')
-    jam2 = input("Masukan Jam (24.00) : ")  #nanti akan mendapatkan nilai [19] [00]
-    jam2_s = jam2.split('.')
+            print('\n==== Masukan Jam Akhir ====')
+            jam2 = input("Masukan Jam (24.00) : ")  #nanti akan mendapatkan nilai [19] [00]
+            jam2_s = jam2.split('.')
 
-    month_s = (waktu_s[1])
-    tgl_folder = str.upper(waktu_s[2] +'-'+ month[month_s])
+            month_s = (waktu_s[1])
+            tgl_folder = str.upper(waktu_s[2] +'-'+ month[month_s])
 
-    epoch_time = datetime.datetime(int(waktu_s[0]),int(waktu_s[1]), int(waktu_s[2]), int(jam_s[0]), int(jam_s[1]), 0).timestamp()*1000
-    epoch_time2 = datetime.datetime(int(waktu_s[0]),int(waktu_s[1]), int(waktu_s[2]), int(jam2_s[0]), int(jam2_s[1]), 0).timestamp()*1000
-    #======================================================================================================================================
+            epoch_time = datetime.datetime(int(waktu_s[0]),int(waktu_s[1]), int(waktu_s[2]), int(jam_s[0]), int(jam_s[1]), 0).timestamp()*1000
+            epoch_time2 = datetime.datetime(int(waktu_s[0]),int(waktu_s[1]), int(waktu_s[2]), int(jam2_s[0]), int(jam2_s[1]), 0).timestamp()*1000
 
+        #Jika Terjadi Error 
+        except ValueError:
+            print("\nInputan Yang Anda Masukan Salah !!!")
+            time.sleep(1)
+            cls()
+            continue
+        except IndexError:
+            print("\nInputan Yang Anda Masukan Salah !!!")
+            time.sleep(1)
+            cls()
+            continue
+        else:
+            break
+    #==============================================================================================================
 
     # Deklarasi webdriver & Tampilan Windows Maksimal ====================
     driver = webdriver.Chrome()
@@ -91,45 +154,7 @@ while(pertanyaan == 'Y'):
     driver.get('http://10.38.3.25/login/login.jsp')
     driver.find_element('name','j_username').send_keys('ald')
     driver.find_element('name','j_password').send_keys('ald' + Keys.ENTER)
-
-
-    # Membuat Function untuk di panggil kembali pada Looping
-    def cls():
-        os.system('cls' if os.name=='nt' else 'clear')
-
-    # Fungsi untuk Screenshoot Harian
-    def loop (ip1:(str), ip2:(str), lokasi:(str), nama:(str)):
-        web = 'http://10.38.3.25/report.jsp?templid=_if&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate'
-        driver.get(web+'&stime='+ str(int(epoch_time)) + '&etime=' + str(int(epoch_time2)) + '&sample_nunits=1&sample_unit=minute')
-        driver.set_window_size(782, 768)
-        wait_element = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'overlay')))
-        time.sleep(1)
-        element = driver.find_element('name','rep_form')
-        if (i % 2 == 0):
-            element.screenshot(lokasi+ str.title(month[month_s]) + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC1_traffic.png')
-        else:
-            element.screenshot(lokasi+ str.title(month[month_s]) + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC2_traffic.png') 
-
-    # Fungsi untuk Screenshoot Custom
-    def loop2 (ip1:(str), ip2:(str), lokasi:(str), nama:(str)):
-        if recog == 'Y':
-            if io == 'IN':
-                web = 'http://10.38.3.25/report.jsp?templid=0026&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate&drilldown_filter=inif%3D'+ip2
-            else:
-                web = 'http://10.38.3.25/report.jsp?templid=0026&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate&drilldown_filter=outif%3D'+ip2
-        else:
-            web = 'http://10.38.3.25/report.jsp?templid=_if&output=chart&device=' + ip1 + '&if=' + ip2 + '&chartTitle=Traffic+Rate'
-        driver.get(web+'&stime='+ str(int(epoch_time)) + '&etime=' + str(int(epoch_time2)) + '&sample_nunits=1&sample_unit=minute')
-        driver.set_window_size(782, 768)
-        wait_element = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'overlay')))
-        time.sleep(1)
-        element = driver.find_element('name','rep_form')
-        if ipsec == "2":
-            element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC2_traffic.png')
-        else:
-            element.screenshot(lokasi+ 'Backup' + '/' + str(tgl_folder)+'-2022_'+nama+'-WAN-IPSEC1_traffic.png')
-
-
+        
     # Kondisi dan Aksi Loop sesuai Input=========================================================================
     if pilihan == "2":
         if ipsec == "2":
@@ -140,6 +165,7 @@ while(pertanyaan == 'Y'):
         loop2(choice[0], choice[1], choice[2], choice[3])
         time.sleep(2)
         cls()
+        driver.minimize_window()
         pertanyaan = input(str.upper('Apakah Anda Ingin Lanjut(Y/T) : '))    
         
     elif pilihan == '1':
@@ -150,6 +176,7 @@ while(pertanyaan == 'Y'):
             loop(choice[0], choice[1], choice[2], choice[3])
         time.sleep(2)
         cls()
+        driver.minimize_window()
         pertanyaan = input(str.upper('Apakah Anda Ingin Lanjut(Y/T) : '))    
 
 # Keluar aplikasi 
